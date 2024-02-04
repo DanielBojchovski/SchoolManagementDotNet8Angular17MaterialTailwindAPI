@@ -1,5 +1,7 @@
 ﻿using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Principal.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Principal.Services;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Professor.Interfaces;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Professor.Services;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.School.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.School.Services;
 
@@ -13,7 +15,7 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.AppStartUp
 
             services.AddScoped<IPrincipalService, PrincipalService>();
 
-            //services.AddScoped<IProfessorService, ProfessorService>();
+            services.AddScoped<IProfessorService, ProfessorService>();
 
             //services.AddScoped<ISubjectService, SubjectService>();
 

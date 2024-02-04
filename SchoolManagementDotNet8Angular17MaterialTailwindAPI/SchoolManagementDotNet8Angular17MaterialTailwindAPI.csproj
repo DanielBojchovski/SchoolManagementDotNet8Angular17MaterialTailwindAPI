@@ -12,11 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Repositories\Professor\Interfaces\" />
-    <Folder Include="Repositories\Professor\Models\" />
-    <Folder Include="Repositories\Professor\Requests\" />
-    <Folder Include="Repositories\Professor\Responses\" />
-    <Folder Include="Repositories\Professor\Services\" />
     <Folder Include="Repositories\Student\Interfaces\" />
     <Folder Include="Repositories\Student\Models\" />
     <Folder Include="Repositories\Student\Requests\" />
