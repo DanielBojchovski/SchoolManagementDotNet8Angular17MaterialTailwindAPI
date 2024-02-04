@@ -19,6 +19,15 @@ builder.Services.AddDbContext<SchoolManagementDotNet8Angular17MaterialTailwindDB
 
 builder.Services.AddDependencyInjectionServices();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: "DanielDevCors",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowCredentials().AllowAnyMethod();
+        });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -27,6 +36,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("DanielDevCors");
 
 app.UseHttpsRedirection();
 
