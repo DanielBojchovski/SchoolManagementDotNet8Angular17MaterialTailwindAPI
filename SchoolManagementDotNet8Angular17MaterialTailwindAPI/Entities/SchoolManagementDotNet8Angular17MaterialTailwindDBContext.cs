@@ -73,12 +73,10 @@ public partial class SchoolManagementDotNet8Angular17MaterialTailwindDBContext :
 
             entity.HasOne(d => d.Student).WithMany(p => p.StudentSubject)
                 .HasForeignKey(d => d.StudentId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_StudentSubject_Student");
 
             entity.HasOne(d => d.Subject).WithMany(p => p.StudentSubject)
                 .HasForeignKey(d => d.SubjectId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_StudentSubject_Subject");
         });
 
