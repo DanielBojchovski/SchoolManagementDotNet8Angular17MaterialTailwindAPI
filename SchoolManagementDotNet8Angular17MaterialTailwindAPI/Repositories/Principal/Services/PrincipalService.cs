@@ -38,22 +38,65 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Princ
             }
         }
 
-        public async Task<OperationStatusResponse> DeletePrincipal(IdRequest request)
+        public async Task<DeletePrincipalResponse> DeletePrincipal(IdRequest request)
         {
             try
             {
                 var principalDto = await _context.Principal.Where(x => x.Id == request.Id).FirstOrDefaultAsync();
 
                 if (principalDto is null)
-                    return new OperationStatusResponse { IsSuccessful = false, Message = $"Principal with ID {request.Id} not found." };
+                {
+                    return new DeletePrincipalResponse
+                    {
+                        OperationStatusResponse = new OperationStatusResponse
+                        {
+                            IsSuccessful = false,
+                            Message = $"Principal with ID {request.Id} not found."
+                        },
+                        GetAllPrincipalsResponse = await GetAllPrincipals()
+                    };
+                }                  
 
                 _context.Remove(principalDto);
-                await _context.SaveChangesAsync();
-                return new OperationStatusResponse { IsSuccessful = true, Message = $"Success. Principal with ID {principalDto.Id} deleted successfully." };
+
+                int rowsChanged = await _context.SaveChangesAsync();
+
+                if (rowsChanged > 0)
+                {
+                    return new DeletePrincipalResponse
+                    {
+                        OperationStatusResponse = new OperationStatusResponse
+                        {
+                            IsSuccessful = true,
+                            Message = "Success. Principal deleted successfully."
+                        },
+                        GetAllPrincipalsResponse = await GetAllPrincipals()
+                    };
+                }
+                else
+                {
+                    return new DeletePrincipalResponse
+                    {
+                        OperationStatusResponse = new OperationStatusResponse
+                        {
+                            IsSuccessful = false,
+                            Message = "Failure. Something went wrong."
+                        },
+                        GetAllPrincipalsResponse = await GetAllPrincipals()
+                    };
+                }
             }
             catch (Exception ex)
             {
-                return new OperationStatusResponse { IsSuccessful = false, Message = $"An error occurred: {ex.Message}" };
+                return new DeletePrincipalResponse
+                {
+                    OperationStatusResponse = new OperationStatusResponse
+                    {
+                        IsSuccessful = false,
+                        Message = $"An error occurred: {ex.Message}"
+                    },
+                    GetAllPrincipalsResponse = await GetAllPrincipals()
+                };
             }
         }
 

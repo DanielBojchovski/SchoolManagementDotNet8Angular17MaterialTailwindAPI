@@ -52,7 +52,7 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Controllers
         }
 
         [HttpPost("DeletePrincipal")]
-        public async Task<ActionResult<OperationStatusResponse>> DeletePrincipal(IdRequest request)
+        public async Task<ActionResult<DeletePrincipalResponse>> DeletePrincipal(IdRequest request)
         {
             return await _service.DeletePrincipal(request);
         }

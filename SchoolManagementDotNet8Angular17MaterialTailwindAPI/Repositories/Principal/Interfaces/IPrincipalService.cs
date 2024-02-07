@@ -13,6 +13,6 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Princ
         public Task<PrincipalModel?> GetPrincipalBySchoolId(IdRequest request);
         public Task<OperationStatusResponse> CreatePrincipal(CreatePrincipalRequest request);
         public Task<OperationStatusResponse> UpdatePrincipal(UpdatePrincipalRequest request);
-        public Task<OperationStatusResponse> DeletePrincipal(IdRequest request);
+        public Task<DeletePrincipalResponse> DeletePrincipal(IdRequest request);
     }
 }
