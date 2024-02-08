@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Models;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Requests;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Responses;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Entities;
@@ -55,7 +56,7 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Princ
                         },
                         GetAllPrincipalsResponse = await GetAllPrincipals()
                     };
-                }                  
+                }
 
                 _context.Remove(principalDto);
 
@@ -165,6 +166,57 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Princ
             {
                 return new OperationStatusResponse { IsSuccessful = false, Message = $"An error occurred: {ex.Message}" };
             }
+        }
+
+        public async Task<DropDownResponse> GetSchoolsDropDown()
+        {
+            var list = await _context.School
+                .Where(x => !_context.Principal.Any(y => y.SchoolId == x.Id))
+                .AsNoTracking()
+                .Select(x => new DropDownItem
+                {
+                    Id = x.Id,
+                    Name = x.Name
+                }).ToListAsync();
+
+            return new DropDownResponse { List = list };
+        }
+
+        public async Task<InitUpdatePrincipalResponse> InitUpdatePrincipal(IdRequest request)
+        {
+            var principal = await _context.Principal
+                .Where(x => x.Id == request.Id)
+                .AsNoTracking()
+                .Select(x => new PrincipalDto
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    SchoolId = x.School.Id
+                }).FirstOrDefaultAsync();
+
+            var schoolAvailableOptions = await _context.School
+                .Where(x => !_context.Principal.Any(y => y.SchoolId == x.Id))
+                .AsNoTracking()
+                .Select(x => new DropDownItem
+                {
+                    Id = x.Id,
+                    Name = x.Name
+                }).ToListAsync();
+
+            var currentSchool = await _context.School
+                .Where(x => x.Id == principal!.SchoolId)
+                .AsNoTracking()
+                .Select(x => new DropDownItem
+                {
+                    Id = x.Id,
+                    Name = x.Name
+                }).ToListAsync();
+
+            return new InitUpdatePrincipalResponse
+            {
+                Principal = principal!,
+                SchoolOptions = [.. schoolAvailableOptions, .. currentSchool]
+            };
         }
     }
 }

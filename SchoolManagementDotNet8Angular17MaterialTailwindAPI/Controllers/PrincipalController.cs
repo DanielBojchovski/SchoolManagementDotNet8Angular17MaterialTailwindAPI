@@ -56,5 +56,17 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Controllers
         {
             return await _service.DeletePrincipal(request);
         }
+
+        [HttpGet("GetSchoolsDropDown")]
+        public async Task<ActionResult<DropDownResponse>> GetSchoolsDropDown()
+        {
+            return await _service.GetSchoolsDropDown();
+        }
+
+        [HttpPost("InitUpdatePrincipal")]
+        public async Task<ActionResult<InitUpdatePrincipalResponse>> InitUpdatePrincipal(IdRequest request)
+        {
+            return await _service.InitUpdatePrincipal(request);
+        }
     }
 }

@@ -14,5 +14,7 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Princ
         public Task<OperationStatusResponse> CreatePrincipal(CreatePrincipalRequest request);
         public Task<OperationStatusResponse> UpdatePrincipal(UpdatePrincipalRequest request);
         public Task<DeletePrincipalResponse> DeletePrincipal(IdRequest request);
+        public Task<DropDownResponse> GetSchoolsDropDown();
+        public Task<InitUpdatePrincipalResponse> InitUpdatePrincipal(IdRequest request);
     }
 }
