@@ -51,7 +51,7 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Controllers
         }
 
         [HttpPost("DeleteProfessor")]
-        public async Task<ActionResult<OperationStatusResponse>> DeleteProfessor(IdRequest request)
+        public async Task<ActionResult<DeleteProfessorResponse>> DeleteProfessor(IdRequest request)
         {
             return await _service.DeleteProfessor(request);
         }

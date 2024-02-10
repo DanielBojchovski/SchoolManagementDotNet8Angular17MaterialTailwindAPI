@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Models;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Requests;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Responses;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Entities;
@@ -38,22 +39,65 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Profe
             }
         }
 
-        public async Task<OperationStatusResponse> DeleteProfessor(IdRequest request)
+        public async Task<DeleteProfessorResponse> DeleteProfessor(IdRequest request)
         {
             try
             {
                 var professorDto = await _context.Professor.Where(x => x.Id == request.Id).FirstOrDefaultAsync();
 
                 if (professorDto is null)
-                    return new OperationStatusResponse { IsSuccessful = false, Message = $"Professor with ID {request.Id} not found." };
+                {
+                    return new DeleteProfessorResponse
+                    {
+                        OperationStatusResponse = new OperationStatusResponse
+                        {
+                            IsSuccessful = false,
+                            Message = $"Professor with ID {request.Id} not found."
+                        },
+                        GetAllProfessorsResponse = await GetAllProfessors()
+                    };
+                }
 
                 _context.Remove(professorDto);
-                await _context.SaveChangesAsync();
-                return new OperationStatusResponse { IsSuccessful = true, Message = $"Success. Professor with ID {professorDto.Id} deleted successfully." };
+
+                int rowsChanged = await _context.SaveChangesAsync();
+
+                if (rowsChanged > 0)
+                {
+                    return new DeleteProfessorResponse
+                    {
+                        OperationStatusResponse = new OperationStatusResponse
+                        {
+                            IsSuccessful = true,
+                            Message = "Success. Professor deleted successfully."
+                        },
+                        GetAllProfessorsResponse = await GetAllProfessors()
+                    };
+                }
+                else
+                {
+                    return new DeleteProfessorResponse
+                    {
+                        OperationStatusResponse = new OperationStatusResponse
+                        {
+                            IsSuccessful = false,
+                            Message = "Failure. Something went wrong."
+                        },
+                        GetAllProfessorsResponse = await GetAllProfessors()
+                    };
+                }
             }
             catch (Exception ex)
             {
-                return new OperationStatusResponse { IsSuccessful = false, Message = $"An error occurred: {ex.Message}" };
+                return new DeleteProfessorResponse
+                {
+                    OperationStatusResponse = new OperationStatusResponse
+                    {
+                        IsSuccessful = false,
+                        Message = $"An error occurred: {ex.Message}"
+                    },
+                    GetAllProfessorsResponse = await GetAllProfessors()
+                };
             }
         }
 
@@ -122,6 +166,19 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Profe
             {
                 return new OperationStatusResponse { IsSuccessful = false, Message = $"An error occurred: {ex.Message}" };
             }
+        }
+
+        public async Task<DropDownResponse> GetSchoolsDropDown()
+        {
+            var list = await _context.School
+                .AsNoTracking()
+                .Select(x => new DropDownItem
+                {
+                    Id = x.Id,
+                    Name = x.Name
+                }).ToListAsync();
+
+            return new DropDownResponse { List = list };
         }
     }
 }
