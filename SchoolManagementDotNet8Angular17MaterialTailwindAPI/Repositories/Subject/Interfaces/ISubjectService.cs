@@ -10,8 +10,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subje
     {
         public Task<GetAllSubjectsResponse> GetAllSubjects();
         public Task<SubjectModel?> GetSubjectById(IdRequest request);
-        public Task<OperationStatusResponse> CreateSubject(CreateSubjectRequest request);
-        public Task<OperationStatusResponse> UpdateSubject(UpdateSubjectRequest request);
-        public Task<OperationStatusResponse> DeleteSubject(IdRequest request);
+        public Task<CreateSubjectResponse> CreateSubject(CreateSubjectRequest request);
+        public Task<UpdateSubjectResponse> UpdateSubject(UpdateSubjectRequest request);
+        public Task<DeleteSubjectResponse> DeleteSubject(IdRequest request);
     }
 }

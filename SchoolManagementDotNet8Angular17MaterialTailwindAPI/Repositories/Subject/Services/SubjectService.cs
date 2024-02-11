@@ -19,42 +19,127 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subje
             _context = context;
         }
 
-        public async Task<OperationStatusResponse> CreateSubject(CreateSubjectRequest request)
+        public async Task<CreateSubjectResponse> CreateSubject(CreateSubjectRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Name))
-                return new OperationStatusResponse { IsSuccessful = false, Message = "Invalid name." };
+            {
+                return new CreateSubjectResponse
+                {
+                    OperationStatusResponse = new OperationStatusResponse
+                    {
+                        IsSuccessful = false,
+                        Message = "Invalid name."
+                    },
+                    GetAllSubjectsResponse = await GetAllSubjects()
+                };
+            }
 
             try
             {
                 Entities.Subject subjectDto = new() { Name = request.Name };
 
                 _context.Add(subjectDto);
-                await _context.SaveChangesAsync();
 
-                return new OperationStatusResponse { IsSuccessful = true, Message = "Success. Subject created successfully." };
+                int rowsChanged = await _context.SaveChangesAsync();
+
+                if (rowsChanged > 0)
+                {
+                    return new CreateSubjectResponse
+                    {
+                        OperationStatusResponse = new OperationStatusResponse
+                        {
+                            IsSuccessful = true,
+                            Message = "Success. Subject created successfully."
+                        },
+                        GetAllSubjectsResponse = await GetAllSubjects()
+                    };
+                }
+                else
+                {
+                    return new CreateSubjectResponse
+                    {
+                        OperationStatusResponse = new OperationStatusResponse
+                        {
+                            IsSuccessful = false,
+                            Message = "Failure. Something went wrong."
+                        },
+                        GetAllSubjectsResponse = await GetAllSubjects()
+                    };
+                }
             }
             catch (Exception ex)
             {
-                return new OperationStatusResponse { IsSuccessful = false, Message = $"An error occurred: {ex.Message}" };
+                return new CreateSubjectResponse
+                {
+                    OperationStatusResponse = new OperationStatusResponse
+                    {
+                        IsSuccessful = false,
+                        Message = $"An error occurred: {ex.Message}"
+                    },
+                    GetAllSubjectsResponse = await GetAllSubjects()
+                };
             }
         }
 
-        public async Task<OperationStatusResponse> DeleteSubject(IdRequest request)
+        public async Task<DeleteSubjectResponse> DeleteSubject(IdRequest request)
         {
             try
             {
                 var subjectDto = await _context.Subject.Where(x => x.Id == request.Id).FirstOrDefaultAsync();
 
                 if (subjectDto is null)
-                    return new OperationStatusResponse { IsSuccessful = false, Message = $"Subject with ID {request.Id} not found." };
+                {
+                    return new DeleteSubjectResponse
+                    {
+                        OperationStatusResponse = new OperationStatusResponse
+                        {
+                            IsSuccessful = false,
+                            Message = $"Subject with ID {request.Id} not found."
+                        },
+                        GetAllSubjectsResponse = await GetAllSubjects()
+                    };
+                }
 
                 _context.Remove(subjectDto);
-                await _context.SaveChangesAsync();
-                return new OperationStatusResponse { IsSuccessful = true, Message = $"Success. Subject with ID {subjectDto.Id} deleted successfully." };
+
+                int rowsChanged = await _context.SaveChangesAsync();
+
+                if (rowsChanged > 0)
+                {
+                    return new DeleteSubjectResponse
+                    {
+                        OperationStatusResponse = new OperationStatusResponse
+                        {
+                            IsSuccessful = true,
+                            Message = "Success. Subject deleted successfully."
+                        },
+                        GetAllSubjectsResponse = await GetAllSubjects()
+                    };
+                }
+                else
+                {
+                    return new DeleteSubjectResponse
+                    {
+                        OperationStatusResponse = new OperationStatusResponse
+                        {
+                            IsSuccessful = false,
+                            Message = "Failure. Something went wrong."
+                        },
+                        GetAllSubjectsResponse = await GetAllSubjects()
+                    };
+                }
             }
             catch (Exception ex)
             {
-                return new OperationStatusResponse { IsSuccessful = false, Message = $"An error occurred: {ex.Message}" };
+                return new DeleteSubjectResponse
+                {
+                    OperationStatusResponse = new OperationStatusResponse
+                    {
+                        IsSuccessful = false,
+                        Message = $"An error occurred: {ex.Message}"
+                    },
+                    GetAllSubjectsResponse = await GetAllSubjects()
+                };
             }
         }
 
@@ -95,26 +180,78 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subje
             return response;
         }
 
-        public async Task<OperationStatusResponse> UpdateSubject(UpdateSubjectRequest request)
+        public async Task<UpdateSubjectResponse> UpdateSubject(UpdateSubjectRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Name))
-                return new OperationStatusResponse { IsSuccessful = false, Message = "Invalid name." };
+            {
+                return new UpdateSubjectResponse
+                {
+                    OperationStatusResponse = new OperationStatusResponse
+                    {
+                        IsSuccessful = false,
+                        Message = "Invalid name."
+                    },
+                    GetAllSubjectsResponse = await GetAllSubjects()
+                };
+            }
 
             try
             {
                 var subjectDto = await _context.Subject.Where(x => x.Id == request.Id).FirstOrDefaultAsync();
 
                 if (subjectDto is null)
-                    return new OperationStatusResponse { IsSuccessful = false, Message = $"Subject with ID {request.Id} not found." };
+                {
+                    return new UpdateSubjectResponse
+                    {
+                        OperationStatusResponse = new OperationStatusResponse
+                        {
+                            IsSuccessful = false,
+                            Message = $"Subject with ID {request.Id} not found."
+                        },
+                        GetAllSubjectsResponse = await GetAllSubjects()
+                    };
+                }
 
                 subjectDto.Name = request.Name;
 
-                await _context.SaveChangesAsync();
-                return new OperationStatusResponse { IsSuccessful = true, Message = $"Success. Subject with ID {subjectDto.Id} updated successfully." };
+                int rowsChanged = await _context.SaveChangesAsync();
+
+                if (rowsChanged > 0)
+                {
+                    return new UpdateSubjectResponse
+                    {
+                        OperationStatusResponse = new OperationStatusResponse
+                        {
+                            IsSuccessful = true,
+                            Message = "Success. Subject updated successfully."
+                        },
+                        GetAllSubjectsResponse = await GetAllSubjects()
+                    };
+                }
+                else
+                {
+                    return new UpdateSubjectResponse
+                    {
+                        OperationStatusResponse = new OperationStatusResponse
+                        {
+                            IsSuccessful = false,
+                            Message = "Failure. Something went wrong."
+                        },
+                        GetAllSubjectsResponse = await GetAllSubjects()
+                    };
+                }
             }
             catch (Exception ex)
             {
-                return new OperationStatusResponse { IsSuccessful = false, Message = $"An error occurred: {ex.Message}" };
+                return new UpdateSubjectResponse
+                {
+                    OperationStatusResponse = new OperationStatusResponse
+                    {
+                        IsSuccessful = false,
+                        Message = $"An error occurred: {ex.Message}"
+                    },
+                    GetAllSubjectsResponse = await GetAllSubjects()
+                };
             }
         }
     }

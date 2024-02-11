@@ -33,19 +33,19 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Controllers
         }
 
         [HttpPost("CreateSubject")]
-        public async Task<ActionResult<OperationStatusResponse>> CreateSubject(CreateSubjectRequest request)
+        public async Task<ActionResult<CreateSubjectResponse>> CreateSubject(CreateSubjectRequest request)
         {
             return await _service.CreateSubject(request);
         }
 
         [HttpPost("UpdateSubject")]
-        public async Task<ActionResult<OperationStatusResponse>> UpdateSubject(UpdateSubjectRequest request)
+        public async Task<ActionResult<UpdateSubjectResponse>> UpdateSubject(UpdateSubjectRequest request)
         {
             return await _service.UpdateSubject(request);
         }
 
         [HttpPost("DeleteSubject")]
-        public async Task<ActionResult<OperationStatusResponse>> DeleteSubject(IdRequest request)
+        public async Task<ActionResult<DeleteSubjectResponse>> DeleteSubject(IdRequest request)
         {
             return await _service.DeleteSubject(request);
         }
