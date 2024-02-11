@@ -15,5 +15,6 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Profe
         public Task<OperationStatusResponse> UpdateProfessor(UpdateProfessorRequest request);
         public Task<DeleteProfessorResponse> DeleteProfessor(IdRequest request);
         public Task<DropDownResponse> GetSchoolsDropDown();
+        public Task<InitUpdateProfessorResponse> InitUpdateProfessor(IdRequest request);
     }
 }

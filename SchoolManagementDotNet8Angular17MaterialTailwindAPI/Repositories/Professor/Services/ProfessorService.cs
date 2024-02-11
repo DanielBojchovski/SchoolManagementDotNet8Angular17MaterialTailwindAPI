@@ -180,5 +180,32 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Profe
 
             return new DropDownResponse { List = list };
         }
+
+        public async Task<InitUpdateProfessorResponse> InitUpdateProfessor(IdRequest request)
+        {
+            var professor = await _context.Professor
+                .Where(x => x.Id == request.Id)
+                .AsNoTracking()
+                .Select(x => new ProfessorDto
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    SchoolId = x.School.Id
+                }).FirstOrDefaultAsync();
+
+            var schoolAvailableOptions = await _context.School
+                .AsNoTracking()
+                .Select(x => new DropDownItem
+                {
+                    Id = x.Id,
+                    Name = x.Name
+                }).ToListAsync();
+
+            return new InitUpdateProfessorResponse
+            {
+                Professor = professor!,
+                SchoolOptions = schoolAvailableOptions
+            };
+        }
     }
 }
