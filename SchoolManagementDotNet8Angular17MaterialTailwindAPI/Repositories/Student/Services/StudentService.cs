@@ -50,22 +50,65 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
             }
         }
 
-        public async Task<OperationStatusResponse> DeleteStudent(IdRequest request)
+        public async Task<DeleteStudentResponse> DeleteStudent(IdRequest request)
         {
             try
             {
                 var studentDto = await _context.Student.Where(x => x.Id == request.Id).FirstOrDefaultAsync();
 
                 if (studentDto is null)
-                    return new OperationStatusResponse { IsSuccessful = false, Message = $"Student with ID {request.Id} not found." };
+                {
+                    return new DeleteStudentResponse
+                    {
+                        OperationStatusResponse = new OperationStatusResponse
+                        {
+                            IsSuccessful = false,
+                            Message = $"Student with ID {request.Id} not found."
+                        },
+                        GetAllStudentsResponse = await GetAllStudents()
+                    };
+                }
 
                 _context.Remove(studentDto);
-                await _context.SaveChangesAsync();
-                return new OperationStatusResponse { IsSuccessful = true, Message = $"Success. Student with ID {studentDto.Id} deleted successfully." };
+
+                int rowsChanged = await _context.SaveChangesAsync();
+
+                if (rowsChanged > 0)
+                {
+                    return new DeleteStudentResponse
+                    {
+                        OperationStatusResponse = new OperationStatusResponse
+                        {
+                            IsSuccessful = true,
+                            Message = "Success. Student deleted successfully."
+                        },
+                        GetAllStudentsResponse = await GetAllStudents()
+                    };
+                }
+                else
+                {
+                    return new DeleteStudentResponse
+                    {
+                        OperationStatusResponse = new OperationStatusResponse
+                        {
+                            IsSuccessful = false,
+                            Message = "Failure. Something went wrong."
+                        },
+                        GetAllStudentsResponse = await GetAllStudents()
+                    };
+                }
             }
             catch (Exception ex)
             {
-                return new OperationStatusResponse { IsSuccessful = false, Message = $"An error occurred: {ex.Message}" };
+                return new DeleteStudentResponse
+                {
+                    OperationStatusResponse = new OperationStatusResponse
+                    {
+                        IsSuccessful = false,
+                        Message = $"An error occurred: {ex.Message}"
+                    },
+                    GetAllStudentsResponse = await GetAllStudents()
+                };
             }
         }
 
@@ -80,7 +123,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
                     Subjects = x.StudentSubject.Where(y => y.StudentId == x.Id).Select(y => new SubjectDto
                     {
                         Id = y.SubjectId,
-                        Name = y.Subject.Name
+                        Name = y.Subject.Name,
+                        IsMajor = y.IsMajor,
                     }).ToList()
                 }).ToListAsync();
 
@@ -121,15 +165,35 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
             return response;
         }
 
-        public async Task<OperationStatusResponse> SetNewMajorForStudent(SetNewMajorForStudentRequest request)
+        public async Task<SetNewMajorForStudentResponse> SetNewMajorForStudent(SetNewMajorForStudentRequest request)
         {
             var student = await _context.Student.FindAsync(request.StudentId);
             if (student == null)
-                return new OperationStatusResponse { IsSuccessful = false, Message = "Student not found." };
+            {
+                return new SetNewMajorForStudentResponse
+                {
+                    OperationStatusResponse = new OperationStatusResponse
+                    {
+                        IsSuccessful = false,
+                        Message = $"Student with ID {request.StudentId} not found."
+                    },
+                    GetAllStudentsResponse = await GetAllStudents()
+                };
+            }
 
             var subject = await _context.Subject.FindAsync(request.NewMajorId);
             if (subject == null)
-                return new OperationStatusResponse { IsSuccessful = false, Message = "Subject not found." };
+            {
+                return new SetNewMajorForStudentResponse
+                {
+                    OperationStatusResponse = new OperationStatusResponse
+                    {
+                        IsSuccessful = false,
+                        Message = $"Subject with ID {request.NewMajorId} not found."
+                    },
+                    GetAllStudentsResponse = await GetAllStudents()
+                };
+            }
 
             var studentSubjectRecords = await _context.StudentSubject
                 .Where(x => x.StudentId == request.StudentId)
@@ -142,9 +206,30 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
 
             int rowsChanged = await _context.SaveChangesAsync();
 
-            return rowsChanged > 0
-                ? new OperationStatusResponse { IsSuccessful = true, Message = $"Success {rowsChanged} rows changed." }
-                : new OperationStatusResponse { IsSuccessful = false, Message = "No changes. Student already has that major." };
+            if (rowsChanged > 0)
+            {
+                return new SetNewMajorForStudentResponse
+                {
+                    OperationStatusResponse = new OperationStatusResponse
+                    {
+                        IsSuccessful = true,
+                        Message = "Success. Student Uudated successfully."
+                    },
+                    GetAllStudentsResponse = await GetAllStudents()
+                };
+            }
+            else
+            {
+                return new SetNewMajorForStudentResponse
+                {
+                    OperationStatusResponse = new OperationStatusResponse
+                    {
+                        IsSuccessful = false,
+                        Message = "Failure. Something went wrong."
+                    },
+                    GetAllStudentsResponse = await GetAllStudents()
+                };
+            }
         }
 
         public async Task<OperationStatusResponse> UpdateStudent(UpdateStudentRequest request)

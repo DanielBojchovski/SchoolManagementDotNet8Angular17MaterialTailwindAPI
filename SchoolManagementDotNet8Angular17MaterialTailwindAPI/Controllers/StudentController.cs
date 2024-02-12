@@ -40,7 +40,7 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Controllers
         }
 
         [HttpPost("SetNewMajorForStudent")]
-        public async Task<ActionResult<OperationStatusResponse>> SetNewMajorForStudent(SetNewMajorForStudentRequest request)
+        public async Task<ActionResult<SetNewMajorForStudentResponse>> SetNewMajorForStudent(SetNewMajorForStudentRequest request)
         {
             return await _service.SetNewMajorForStudent(request);
         }
@@ -58,7 +58,7 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Controllers
         }
 
         [HttpPost("DeleteStudent")]
-        public async Task<ActionResult<OperationStatusResponse>> DeleteStudent(IdRequest request)
+        public async Task<ActionResult<DeleteStudentResponse>> DeleteStudent(IdRequest request)
         {
             return await _service.DeleteStudent(request);
         }
