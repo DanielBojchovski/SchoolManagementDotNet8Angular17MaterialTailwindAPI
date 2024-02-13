@@ -346,5 +346,17 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
 
             return listToReturn;
         }
+
+        public async Task<GetAvailableSubjectsResponse> GetAvailableSubjects()
+        {
+            var list = await _context.Subject.AsNoTracking().Select(x => new SubjectDto
+            {
+                Id = x.Id,
+                Name = x.Name,
+                IsMajor = false
+            }).ToListAsync();
+
+            return new GetAvailableSubjectsResponse { List = list };
+        }
     }
 }

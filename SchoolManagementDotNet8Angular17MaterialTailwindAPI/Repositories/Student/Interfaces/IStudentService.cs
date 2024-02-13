@@ -15,5 +15,6 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
         public Task<OperationStatusResponse> CreateStudent(CreateStudentRequest request);
         public Task<OperationStatusResponse> UpdateStudent(UpdateStudentRequest request);
         public Task<DeleteStudentResponse> DeleteStudent(IdRequest request);
+        public Task<GetAvailableSubjectsResponse> GetAvailableSubjects();
     }
 }

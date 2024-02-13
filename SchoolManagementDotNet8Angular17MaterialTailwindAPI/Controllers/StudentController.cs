@@ -62,5 +62,11 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Controllers
         {
             return await _service.DeleteStudent(request);
         }
+
+        [HttpGet("GetAvailableSubjects")]
+        public async Task<ActionResult<GetAvailableSubjectsResponse>> GetAvailableSubjects()
+        {
+            return await _service.GetAvailableSubjects();
+        }
     }
 }
