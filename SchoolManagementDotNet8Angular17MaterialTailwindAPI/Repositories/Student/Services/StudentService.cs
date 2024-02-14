@@ -140,10 +140,13 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
                 {
                     Id = x.Id,
                     Name = x.Name,
-                    Subjects = x.StudentSubject.Where(y => y.StudentId == x.Id).Select(y => new SubjectDto
+                    Subjects = _context.Subject
+                    .Select(y => new SubjectDto
                     {
-                        Id = y.SubjectId,
-                        Name = y.Subject.Name
+                        Id = y.Id,
+                        Name = y.Name,
+                        IsMajor = y.StudentSubject.Any(z => z.StudentId == request.Id && z.IsMajor == true),
+                        IsSelected = y.StudentSubject.Any(z => z.StudentId == request.Id)
                     }).ToList()
                 }).FirstOrDefaultAsync();
 
