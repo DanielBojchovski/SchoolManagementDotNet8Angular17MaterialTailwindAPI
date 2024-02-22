@@ -1,4 +1,6 @@
-﻿using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Principal.Interfaces;
+﻿using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Redis.Interfaces;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Redis.Services;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Principal.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Principal.Services;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Professor.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Professor.Services;
@@ -24,6 +26,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.AppStartUp
             services.AddScoped<ISubjectService, SubjectService>();
 
             services.AddScoped<IStudentService, StudentService>();
+
+            services.AddSingleton<ICacheService, CacheService>();
 
             return services;
         }
