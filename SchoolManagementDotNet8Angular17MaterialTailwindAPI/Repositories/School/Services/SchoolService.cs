@@ -2,26 +2,33 @@
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Requests;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Responses;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Entities;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Redis.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.School.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.School.Models;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.School.Requests;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.School.Responses;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.School.Services
 {
     public class SchoolService : ISchoolService
     {
         private readonly SchoolManagementDotNet8Angular17MaterialTailwindDBContext _context;
+        private readonly ICacheService _cacheService;
 
-        public SchoolService(SchoolManagementDotNet8Angular17MaterialTailwindDBContext context)
+        public SchoolService(SchoolManagementDotNet8Angular17MaterialTailwindDBContext context, ICacheService cacheService)
         {
             _context = context;
+            _cacheService = cacheService;
         }
 
         public async Task<GetAllSchoolsResponse> GetAllSchools()
         {
-            var response = await _context.School
+            var cacheData = _cacheService.GetData<GetAllSchoolsResponse>("schools");
+
+            if (cacheData is not null && cacheData.List.Count > 0)
+                return cacheData;
+
+            var list = await _context.School
                 .AsNoTracking()
                 .Select(x => new SchoolModel
                 {
@@ -29,12 +36,21 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Schoo
                     Name = x.Name
                 }).ToListAsync();
 
-            return new GetAllSchoolsResponse { List = response };
+            GetAllSchoolsResponse response = new() { List = list };
+
+            _cacheService.SetData("schools", response, DateTimeOffset.Now.AddMonths(1));
+
+            return response;
         }
 
         public async Task<SchoolModel?> GetSchoolById(IdRequest request)
         {
-            var response = await _context.School
+            var cacheData = _cacheService.GetData<SchoolModel>($"schoolId{request.Id}");
+
+            if (cacheData is not null)
+                return cacheData;
+
+            SchoolModel? response = await _context.School
                 .Where(x => x.Id == request.Id)
                 .AsNoTracking()
                 .Select(x => new SchoolModel
@@ -43,12 +59,19 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Schoo
                     Name = x.Name
                 }).FirstOrDefaultAsync();
 
+            _cacheService.SetData($"schoolId{request.Id}", response, DateTimeOffset.Now.AddMonths(1));
+
             return response;
         }
 
         public async Task<SchoolModel?> GetSchoolByPrincipalId(IdRequest request)
         {
-            var response = await _context.Principal
+            var cacheData = _cacheService.GetData<SchoolModel>($"schoolPrincipalId{request.Id}");
+
+            if (cacheData is not null)
+                return cacheData;
+
+            SchoolModel? response = await _context.Principal
                 .Where(x => x.Id == request.Id)
                 .AsNoTracking()
                 .Select(x => new SchoolModel
@@ -56,13 +79,20 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Schoo
                     Id = x.School.Id,
                     Name = x.School.Name
                 }).FirstOrDefaultAsync();
+
+            _cacheService.SetData($"schoolPrincipalId{request.Id}", response, DateTimeOffset.Now.AddMonths(1));
 
             return response;
         }
 
         public async Task<SchoolModel?> GetSchoolByProfessorId(IdRequest request)
         {
-            var response = await _context.Professor
+            var cacheData = _cacheService.GetData<SchoolModel>($"schoolProfessorId{request.Id}");
+
+            if (cacheData is not null)
+                return cacheData;
+
+            SchoolModel? response = await _context.Professor
                 .Where(x => x.Id == request.Id)
                 .AsNoTracking()
                 .Select(x => new SchoolModel
@@ -70,6 +100,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Schoo
                     Id = x.School.Id,
                     Name = x.School.Name
                 }).FirstOrDefaultAsync();
+
+            _cacheService.SetData($"schoolProfessorId{request.Id}", response, DateTimeOffset.Now.AddMonths(1));
 
             return response;
         }
@@ -93,9 +125,12 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Schoo
             {
                 Entities.School schoolDto = new() { Name = request.Name };
 
-                _context.Add(schoolDto);
+                var addedObj = _context.Add(schoolDto);
 
                 int rowsChanged = await _context.SaveChangesAsync();
+
+                _cacheService.SetData($"schoolId{schoolDto.Id}", addedObj.Entity, DateTimeOffset.Now.AddMonths(1));
+                _cacheService.RemoveData("schools");
 
                 if (rowsChanged > 0)
                 {
@@ -172,6 +207,9 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Schoo
 
                 int rowsChanged = await _context.SaveChangesAsync();
 
+                _cacheService.SetData($"schoolId{request.Id}", schoolDto, DateTimeOffset.Now.AddSeconds(60));
+                _cacheService.RemoveData("schools");
+
                 if (rowsChanged > 0)
                 {
                     return new UpdateSchoolResponse
@@ -233,6 +271,9 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Schoo
                 _context.Remove(schoolDto);
 
                 int rowsChanged = await _context.SaveChangesAsync();
+
+                _cacheService.RemoveData($"schoolId{schoolDto.Id}");
+                _cacheService.RemoveData("schools");
 
                 if (rowsChanged > 0)
                 {
