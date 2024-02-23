@@ -207,7 +207,7 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Schoo
 
                 int rowsChanged = await _context.SaveChangesAsync();
 
-                _cacheService.SetData($"schoolId{request.Id}", schoolDto, DateTimeOffset.Now.AddSeconds(60));
+                _cacheService.SetData($"schoolId{request.Id}", schoolDto, DateTimeOffset.Now.AddMonths(1));
                 _cacheService.RemoveData("schools");
 
                 if (rowsChanged > 0)
