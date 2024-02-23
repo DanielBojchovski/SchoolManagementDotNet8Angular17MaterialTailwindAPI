@@ -1,5 +1,4 @@
 ﻿using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Requests;
-using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Responses;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subject.Models;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subject.Requests;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subject.Responses;

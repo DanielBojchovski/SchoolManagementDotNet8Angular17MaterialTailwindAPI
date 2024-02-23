@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Requests;
-using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Responses;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subject.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subject.Models;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subject.Requests;
