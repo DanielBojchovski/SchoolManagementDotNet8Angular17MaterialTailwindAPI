@@ -2,6 +2,7 @@
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Requests;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Responses;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Entities;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Redis.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Student.Models;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subject.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subject.Models;
@@ -13,10 +14,12 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subje
     public class SubjectService : ISubjectService
     {
         private readonly SchoolManagementDotNet8Angular17MaterialTailwindDBContext _context;
+        private readonly ICacheService _cacheService;
 
-        public SubjectService(SchoolManagementDotNet8Angular17MaterialTailwindDBContext context)
+        public SubjectService(SchoolManagementDotNet8Angular17MaterialTailwindDBContext context, ICacheService cacheService)
         {
             _context = context;
+            _cacheService = cacheService;
         }
 
         public async Task<CreateSubjectResponse> CreateSubject(CreateSubjectRequest request)
@@ -38,9 +41,12 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subje
             {
                 Entities.Subject subjectDto = new() { Name = request.Name };
 
-                _context.Add(subjectDto);
+                var addedObj = _context.Add(subjectDto);
 
                 int rowsChanged = await _context.SaveChangesAsync();
+
+                _cacheService.SetData($"subjectId{subjectDto.Id}", addedObj.Entity, DateTimeOffset.Now.AddMonths(1));
+                _cacheService.RemoveData("subjects");
 
                 if (rowsChanged > 0)
                 {
@@ -104,6 +110,9 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subje
 
                 int rowsChanged = await _context.SaveChangesAsync();
 
+                _cacheService.RemoveData($"subjectId{subjectDto.Id}");
+                _cacheService.RemoveData("subjects");
+
                 if (rowsChanged > 0)
                 {
                     return new DeleteSubjectResponse
@@ -145,7 +154,12 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subje
 
         public async Task<GetAllSubjectsResponse> GetAllSubjects()
         {
-            var response = await _context.Subject
+            var cacheData = _cacheService.GetData<GetAllSubjectsResponse>("subjects");
+
+            if (cacheData is not null && cacheData.List.Count > 0)
+                return cacheData;
+
+            var list = await _context.Subject
                 .AsNoTracking()
                 .Select(x => new SubjectModel
                 {
@@ -158,11 +172,20 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subje
                     }).ToList()
                 }).ToListAsync();
 
-            return new GetAllSubjectsResponse { List = response };
+            GetAllSubjectsResponse response = new() { List = list };
+
+            _cacheService.SetData("subjects", response, DateTimeOffset.Now.AddMonths(1));
+
+            return response;
         }
 
         public async Task<SubjectModel?> GetSubjectById(IdRequest request)
         {
+            var cacheData = _cacheService.GetData<SubjectModel>($"subjectId{request.Id}");
+
+            if (cacheData is not null)
+                return cacheData;
+
             var response = await _context.Subject
                 .Where(x => x.Id == request.Id)
                 .AsNoTracking()
@@ -176,6 +199,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subje
                         Name = y.Student.Name
                     }).ToList()
                 }).FirstOrDefaultAsync();
+
+            _cacheService.SetData($"subjectId{request.Id}", response, DateTimeOffset.Now.AddMonths(1));
 
             return response;
         }
@@ -215,6 +240,9 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subje
                 subjectDto.Name = request.Name;
 
                 int rowsChanged = await _context.SaveChangesAsync();
+
+                _cacheService.SetData($"subjectId{request.Id}", subjectDto, DateTimeOffset.Now.AddMonths(1));
+                _cacheService.RemoveData("subjects");
 
                 if (rowsChanged > 0)
                 {
