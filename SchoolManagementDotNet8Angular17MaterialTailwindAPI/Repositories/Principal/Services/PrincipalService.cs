@@ -3,6 +3,7 @@ using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Models;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Requests;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Responses;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Entities;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Redis.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Principal.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Principal.Models;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Principal.Requests;
@@ -13,10 +14,12 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Princ
     public class PrincipalService : IPrincipalService
     {
         private readonly SchoolManagementDotNet8Angular17MaterialTailwindDBContext _context;
+        private readonly ICacheService _cacheService;
 
-        public PrincipalService(SchoolManagementDotNet8Angular17MaterialTailwindDBContext context)
+        public PrincipalService(SchoolManagementDotNet8Angular17MaterialTailwindDBContext context, ICacheService cacheService)
         {
             _context = context;
+            _cacheService = cacheService;
         }
 
         public async Task<OperationStatusResponse> CreatePrincipal(CreatePrincipalRequest request)
@@ -30,6 +33,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Princ
 
                 _context.Add(principalDto);
                 await _context.SaveChangesAsync();
+
+                _cacheService.RemoveData("principals");
 
                 return new OperationStatusResponse { IsSuccessful = true, Message = "Success. Principal created successfully." };
             }
@@ -61,6 +66,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Princ
                 _context.Remove(principalDto);
 
                 int rowsChanged = await _context.SaveChangesAsync();
+
+                _cacheService.RemoveData("principals");
 
                 if (rowsChanged > 0)
                 {
@@ -103,7 +110,12 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Princ
 
         public async Task<GetAllPrincipalsResponse> GetAllPrincipals()
         {
-            var response = await _context.Principal
+            var cacheData = _cacheService.GetData<GetAllPrincipalsResponse>("principals");
+
+            if (cacheData is not null && cacheData.List.Count > 0)
+                return cacheData;
+
+            var list = await _context.Principal
                 .AsNoTracking()
                 .Select(x => new PrincipalModel
                 {
@@ -112,7 +124,11 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Princ
                     SchoolName = x.School.Name
                 }).ToListAsync();
 
-            return new GetAllPrincipalsResponse { List = response };
+            GetAllPrincipalsResponse response = new() { List = list };
+
+            _cacheService.SetData("principals", response, DateTimeOffset.Now.AddMonths(1));
+
+            return response;
         }
 
         public async Task<PrincipalModel?> GetPrincipalById(IdRequest request)
@@ -160,6 +176,9 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Princ
                 principalDto.Name = request.Name;
                 principalDto.SchoolId = request.SchoolId;
                 await _context.SaveChangesAsync();
+
+                _cacheService.RemoveData("principals");
+
                 return new OperationStatusResponse { IsSuccessful = true, Message = $"Success. Principal with ID {principalDto.Id} updated successfully." };
             }
             catch (Exception ex)
@@ -170,6 +189,11 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Princ
 
         public async Task<DropDownResponse> GetSchoolsDropDown()
         {
+            var cacheData = _cacheService.GetData<DropDownResponse>("schoolsDropDownForPrincipal");
+
+            if (cacheData is not null && cacheData.List.Count > 0)
+                return cacheData;
+
             var list = await _context.School
                 .Where(x => !_context.Principal.Any(y => y.SchoolId == x.Id))
                 .AsNoTracking()
@@ -179,7 +203,11 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Princ
                     Name = x.Name
                 }).ToListAsync();
 
-            return new DropDownResponse { List = list };
+            DropDownResponse response = new() { List = list };
+
+            _cacheService.SetData("schoolsDropDownForPrincipal", response, DateTimeOffset.Now.AddMonths(1));
+
+            return response;
         }
 
         public async Task<InitUpdatePrincipalResponse> InitUpdatePrincipal(IdRequest request)
