@@ -3,6 +3,7 @@ using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Models;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Requests;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Responses;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Entities;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Redis.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Professor.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Professor.Models;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Professor.Requests;
@@ -13,10 +14,12 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Profe
     public class ProfessorService : IProfessorService
     {
         private readonly SchoolManagementDotNet8Angular17MaterialTailwindDBContext _context;
+        private readonly ICacheService _cacheService;
 
-        public ProfessorService(SchoolManagementDotNet8Angular17MaterialTailwindDBContext context)
+        public ProfessorService(SchoolManagementDotNet8Angular17MaterialTailwindDBContext context, ICacheService cacheService)
         {
             _context = context;
+            _cacheService = cacheService;
         }
 
         public async Task<OperationStatusResponse> CreateProfessor(CreateProfessorRequest request)
@@ -30,6 +33,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Profe
 
                 _context.Add(professorDto);
                 await _context.SaveChangesAsync();
+
+                _cacheService.RemoveData("professors");
 
                 return new OperationStatusResponse { IsSuccessful = true, Message = "Success. Professor created successfully." };
             }
@@ -61,6 +66,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Profe
                 _context.Remove(professorDto);
 
                 int rowsChanged = await _context.SaveChangesAsync();
+
+                _cacheService.RemoveData("professors");
 
                 if (rowsChanged > 0)
                 {
@@ -103,7 +110,12 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Profe
 
         public async Task<GetAllProfessorsResponse> GetAllProfessors()
         {
-            var response = await _context.Professor
+            var cacheData = _cacheService.GetData<GetAllProfessorsResponse>("professors");
+
+            if (cacheData is not null && cacheData.List.Count > 0)
+                return cacheData;
+
+            var list = await _context.Professor
                 .AsNoTracking()
                 .Select(x => new ProfessorModel
                 {
@@ -112,7 +124,11 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Profe
                     SchoolName = x.School.Name
                 }).ToListAsync();
 
-            return new GetAllProfessorsResponse { List = response };
+            GetAllProfessorsResponse response = new() { List = list };
+
+            _cacheService.SetData("professors", response, DateTimeOffset.Now.AddMonths(1));
+
+            return response;
         }
 
         public async Task<ProfessorModel?> GetProfessorById(IdRequest request)
@@ -160,6 +176,9 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Profe
                 professorDto.Name = request.Name;
                 professorDto.SchoolId = request.SchoolId;
                 await _context.SaveChangesAsync();
+
+                _cacheService.RemoveData("professors");
+
                 return new OperationStatusResponse { IsSuccessful = true, Message = $"Success. Professor with ID {professorDto.Id} updated successfully." };
             }
             catch (Exception ex)
@@ -170,6 +189,11 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Profe
 
         public async Task<DropDownResponse> GetSchoolsDropDown()
         {
+            var cacheData = _cacheService.GetData<DropDownResponse>("schoolsDropDownForProfessor");
+
+            if (cacheData is not null && cacheData.List.Count > 0)
+                return cacheData;
+
             var list = await _context.School
                 .AsNoTracking()
                 .Select(x => new DropDownItem
@@ -178,12 +202,16 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Profe
                     Name = x.Name
                 }).ToListAsync();
 
-            return new DropDownResponse { List = list };
+            DropDownResponse response = new() { List = list };
+
+            _cacheService.SetData("schoolsDropDownForProfessor", response, DateTimeOffset.Now.AddMonths(1));
+
+            return response;
         }
 
         public async Task<InitUpdateProfessorResponse> InitUpdateProfessor(IdRequest request)
         {
-            var professor = await _context.Professor
+             var professor = await _context.Professor
                 .Where(x => x.Id == request.Id)
                 .AsNoTracking()
                 .Select(x => new ProfessorDto

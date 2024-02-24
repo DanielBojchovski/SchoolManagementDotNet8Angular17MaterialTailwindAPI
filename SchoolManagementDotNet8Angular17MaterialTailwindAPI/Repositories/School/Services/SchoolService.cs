@@ -130,7 +130,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Schoo
                 int rowsChanged = await _context.SaveChangesAsync();
 
                 _cacheService.SetData($"schoolId{schoolDto.Id}", addedObj.Entity, DateTimeOffset.Now.AddMonths(1));
-                _cacheService.RemoveData("schools");
+                _cacheService.RemoveData("schools");              
+                _cacheService.RemoveData("schoolsDropDownForProfessor");
 
                 if (rowsChanged > 0)
                 {
@@ -209,6 +210,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Schoo
 
                 _cacheService.SetData($"schoolId{request.Id}", schoolDto, DateTimeOffset.Now.AddMonths(1));
                 _cacheService.RemoveData("schools");
+                _cacheService.RemoveData("professors");
+                _cacheService.RemoveData("schoolsDropDownForProfessor");
 
                 if (rowsChanged > 0)
                 {
@@ -274,6 +277,7 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Schoo
 
                 _cacheService.RemoveData($"schoolId{schoolDto.Id}");
                 _cacheService.RemoveData("schools");
+                _cacheService.RemoveData("schoolsDropDownForProfessor");
 
                 if (rowsChanged > 0)
                 {
