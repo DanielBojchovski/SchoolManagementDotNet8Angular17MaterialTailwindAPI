@@ -45,12 +45,12 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subje
 
                 int rowsChanged = await _context.SaveChangesAsync();
 
-                _cacheService.SetData($"subjectId{subjectDto.Id}", addedObj.Entity, DateTimeOffset.Now.AddMonths(1));
-                _cacheService.RemoveData("subjects");
-                _cacheService.RemoveData("availableSubjects");
-
                 if (rowsChanged > 0)
                 {
+                    _cacheService.SetData($"subjectId{subjectDto.Id}", addedObj.Entity, DateTimeOffset.Now.AddMonths(1));
+                    _cacheService.RemoveData("subjects");
+                    _cacheService.RemoveData("availableSubjects");
+
                     return new CreateSubjectResponse
                     {
                         OperationStatusResponse = new OperationStatusResponse
@@ -111,12 +111,12 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subje
 
                 int rowsChanged = await _context.SaveChangesAsync();
 
-                _cacheService.RemoveData($"subjectId{subjectDto.Id}");
-                _cacheService.RemoveData("subjects");
-                _cacheService.RemoveData("availableSubjects");
-
                 if (rowsChanged > 0)
                 {
+                    _cacheService.RemoveData($"subjectId{subjectDto.Id}");
+                    _cacheService.RemoveData("subjects");
+                    _cacheService.RemoveData("availableSubjects");
+
                     return new DeleteSubjectResponse
                     {
                         OperationStatusResponse = new OperationStatusResponse
@@ -243,13 +243,13 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subje
 
                 int rowsChanged = await _context.SaveChangesAsync();
 
-                _cacheService.SetData($"subjectId{request.Id}", subjectDto, DateTimeOffset.Now.AddMonths(1));
-                _cacheService.RemoveData("subjects");
-                _cacheService.RemoveData("students");
-                _cacheService.RemoveData("availableSubjects");
-
                 if (rowsChanged > 0)
                 {
+                    _cacheService.SetData($"subjectId{request.Id}", subjectDto, DateTimeOffset.Now.AddMonths(1));
+                    _cacheService.RemoveData("subjects");
+                    _cacheService.RemoveData("students");
+                    _cacheService.RemoveData("availableSubjects");
+
                     return new UpdateSubjectResponse
                     {
                         OperationStatusResponse = new OperationStatusResponse

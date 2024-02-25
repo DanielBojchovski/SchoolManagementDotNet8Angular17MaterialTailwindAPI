@@ -78,10 +78,10 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
 
                 int rowsChanged = await _context.SaveChangesAsync();
 
-                _cacheService.RemoveData("students");
-
                 if (rowsChanged > 0)
                 {
+                    _cacheService.RemoveData("students");
+
                     return new DeleteStudentResponse
                     {
                         OperationStatusResponse = new OperationStatusResponse
@@ -225,10 +225,10 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
 
             int rowsChanged = await _context.SaveChangesAsync();
 
-            _cacheService.RemoveData("students");
-
             if (rowsChanged > 0)
             {
+                _cacheService.RemoveData("students");
+
                 return new SetNewMajorForStudentResponse
                 {
                     OperationStatusResponse = new OperationStatusResponse

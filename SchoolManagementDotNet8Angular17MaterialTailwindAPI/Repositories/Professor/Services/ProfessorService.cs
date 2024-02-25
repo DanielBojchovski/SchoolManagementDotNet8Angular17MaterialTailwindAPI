@@ -67,10 +67,10 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Profe
 
                 int rowsChanged = await _context.SaveChangesAsync();
 
-                _cacheService.RemoveData("professors");
-
                 if (rowsChanged > 0)
                 {
+                    _cacheService.RemoveData("professors");
+
                     return new DeleteProfessorResponse
                     {
                         OperationStatusResponse = new OperationStatusResponse

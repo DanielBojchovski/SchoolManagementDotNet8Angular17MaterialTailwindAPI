@@ -129,13 +129,13 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Schoo
 
                 int rowsChanged = await _context.SaveChangesAsync();
 
-                _cacheService.SetData($"schoolId{schoolDto.Id}", addedObj.Entity, DateTimeOffset.Now.AddMonths(1));
-                _cacheService.RemoveData("schools");              
-                _cacheService.RemoveData("schoolsDropDownForProfessor");
-                _cacheService.RemoveData("schoolsDropDownForPrincipal");
-
                 if (rowsChanged > 0)
                 {
+                    _cacheService.SetData($"schoolId{schoolDto.Id}", addedObj.Entity, DateTimeOffset.Now.AddMonths(1));
+                    _cacheService.RemoveData("schools");
+                    _cacheService.RemoveData("schoolsDropDownForProfessor");
+                    _cacheService.RemoveData("schoolsDropDownForPrincipal");
+
                     return new CreateSchoolResponse
                     {
                         OperationStatusResponse = new OperationStatusResponse
@@ -209,15 +209,15 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Schoo
 
                 int rowsChanged = await _context.SaveChangesAsync();
 
-                _cacheService.SetData($"schoolId{request.Id}", schoolDto, DateTimeOffset.Now.AddMonths(1));
-                _cacheService.RemoveData("schools");
-                _cacheService.RemoveData("professors");
-                _cacheService.RemoveData("schoolsDropDownForProfessor");
-                _cacheService.RemoveData("principals");
-                _cacheService.RemoveData("schoolsDropDownForPrincipal");
-
                 if (rowsChanged > 0)
                 {
+                    _cacheService.SetData($"schoolId{request.Id}", schoolDto, DateTimeOffset.Now.AddMonths(1));
+                    _cacheService.RemoveData("schools");
+                    _cacheService.RemoveData("professors");
+                    _cacheService.RemoveData("schoolsDropDownForProfessor");
+                    _cacheService.RemoveData("principals");
+                    _cacheService.RemoveData("schoolsDropDownForPrincipal");
+
                     return new UpdateSchoolResponse
                     {
                         OperationStatusResponse = new OperationStatusResponse
@@ -278,13 +278,13 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Schoo
 
                 int rowsChanged = await _context.SaveChangesAsync();
 
-                _cacheService.RemoveData($"schoolId{schoolDto.Id}");
-                _cacheService.RemoveData("schools");
-                _cacheService.RemoveData("schoolsDropDownForProfessor");
-                _cacheService.RemoveData("schoolsDropDownForPrincipal");
-
                 if (rowsChanged > 0)
                 {
+                    _cacheService.RemoveData($"schoolId{schoolDto.Id}");
+                    _cacheService.RemoveData("schools");
+                    _cacheService.RemoveData("schoolsDropDownForProfessor");
+                    _cacheService.RemoveData("schoolsDropDownForPrincipal");
+
                     return new DeleteSchoolResponse
                     {
                         OperationStatusResponse = new OperationStatusResponse

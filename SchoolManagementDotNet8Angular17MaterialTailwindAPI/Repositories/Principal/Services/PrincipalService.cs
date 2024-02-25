@@ -67,10 +67,10 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Princ
 
                 int rowsChanged = await _context.SaveChangesAsync();
 
-                _cacheService.RemoveData("principals");
-
                 if (rowsChanged > 0)
                 {
+                    _cacheService.RemoveData("principals");
+
                     return new DeletePrincipalResponse
                     {
                         OperationStatusResponse = new OperationStatusResponse
