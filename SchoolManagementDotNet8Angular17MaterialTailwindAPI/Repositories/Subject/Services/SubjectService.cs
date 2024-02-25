@@ -47,6 +47,7 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subje
 
                 _cacheService.SetData($"subjectId{subjectDto.Id}", addedObj.Entity, DateTimeOffset.Now.AddMonths(1));
                 _cacheService.RemoveData("subjects");
+                _cacheService.RemoveData("availableSubjects");
 
                 if (rowsChanged > 0)
                 {
@@ -112,6 +113,7 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subje
 
                 _cacheService.RemoveData($"subjectId{subjectDto.Id}");
                 _cacheService.RemoveData("subjects");
+                _cacheService.RemoveData("availableSubjects");
 
                 if (rowsChanged > 0)
                 {
@@ -243,6 +245,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Subje
 
                 _cacheService.SetData($"subjectId{request.Id}", subjectDto, DateTimeOffset.Now.AddMonths(1));
                 _cacheService.RemoveData("subjects");
+                _cacheService.RemoveData("students");
+                _cacheService.RemoveData("availableSubjects");
 
                 if (rowsChanged > 0)
                 {

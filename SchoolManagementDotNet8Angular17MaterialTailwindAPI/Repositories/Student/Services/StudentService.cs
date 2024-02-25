@@ -2,6 +2,7 @@
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Requests;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Responses;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Entities;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Redis.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Student.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Student.Models;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Student.Requests;
@@ -13,10 +14,12 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
     public class StudentService : IStudentService
     {
         private readonly SchoolManagementDotNet8Angular17MaterialTailwindDBContext _context;
+        private readonly ICacheService _cacheService;
 
-        public StudentService(SchoolManagementDotNet8Angular17MaterialTailwindDBContext context)
+        public StudentService(SchoolManagementDotNet8Angular17MaterialTailwindDBContext context, ICacheService cacheService)
         {
             _context = context;
+            _cacheService = cacheService;
         }
 
         public async Task<OperationStatusResponse> CreateStudent(CreateStudentRequest request)
@@ -41,6 +44,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
                 }
 
                 await _context.SaveChangesAsync();
+
+                _cacheService.RemoveData("students");
 
                 return new OperationStatusResponse { IsSuccessful = true, Message = "Success. Student created successfully." };
             }
@@ -72,6 +77,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
                 _context.Remove(studentDto);
 
                 int rowsChanged = await _context.SaveChangesAsync();
+
+                _cacheService.RemoveData("students");
 
                 if (rowsChanged > 0)
                 {
@@ -114,7 +121,12 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
 
         public async Task<GetAllStudentsResponse> GetAllStudents()
         {
-            var response = await _context.Student
+            var cacheData = _cacheService.GetData<GetAllStudentsResponse>("students");
+
+            if (cacheData is not null && cacheData.List.Count > 0)
+                return cacheData;
+
+            var list = await _context.Student
                 .AsNoTracking()
                 .Select(x => new StudentModel
                 {
@@ -128,7 +140,11 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
                     }).ToList()
                 }).ToListAsync();
 
-            return new GetAllStudentsResponse { List = response };
+            GetAllStudentsResponse response = new() { List = list };
+
+            _cacheService.SetData("students", response, DateTimeOffset.Now.AddMonths(1));
+
+            return response;
         }
 
         public async Task<StudentModel?> GetStudentById(IdRequest request)
@@ -208,6 +224,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
             }
 
             int rowsChanged = await _context.SaveChangesAsync();
+
+            _cacheService.RemoveData("students");
 
             if (rowsChanged > 0)
             {
@@ -295,6 +313,9 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
                 }
 
                 await _context.SaveChangesAsync();
+
+                _cacheService.RemoveData("students");
+
                 return new OperationStatusResponse { IsSuccessful = true, Message = $"Success. Student with ID {studentDto.Id} updated successfully." };
             }
             catch (Exception ex)
@@ -352,6 +373,11 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
 
         public async Task<GetAvailableSubjectsResponse> GetAvailableSubjects()
         {
+            var cacheData = _cacheService.GetData<GetAvailableSubjectsResponse>("availableSubjects");
+
+            if (cacheData is not null && cacheData.List.Count > 0)
+                return cacheData;
+
             var list = await _context.Subject.AsNoTracking().Select(x => new SubjectDto
             {
                 Id = x.Id,
@@ -359,7 +385,11 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Stude
                 IsMajor = false
             }).ToListAsync();
 
-            return new GetAvailableSubjectsResponse { List = list };
+            GetAvailableSubjectsResponse response = new() { List = list };
+
+            _cacheService.SetData("availableSubjects", response, DateTimeOffset.Now.AddMonths(1));
+
+            return response;
         }
     }
 }
