@@ -35,6 +35,7 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Princ
                 await _context.SaveChangesAsync();
 
                 _cacheService.RemoveData("principals");
+                _cacheService.RemoveData("schoolsDropDownForPrincipal");
 
                 return new OperationStatusResponse { IsSuccessful = true, Message = "Success. Principal created successfully." };
             }
