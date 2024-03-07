@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.AppStartUp;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.EmailNotification.Options;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +28,8 @@ builder.Services.AddCors(options =>
             policy.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowCredentials().AllowAnyMethod();
         });
 });
+
+builder.Services.ConfigureOptions<MailOptionsSetup>();
 
 var app = builder.Build();
 

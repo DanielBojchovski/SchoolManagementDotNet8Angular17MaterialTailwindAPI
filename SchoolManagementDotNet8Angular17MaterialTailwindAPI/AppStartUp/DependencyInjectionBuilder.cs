@@ -1,4 +1,6 @@
-﻿using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Redis.Interfaces;
+﻿using SchoolManagementDotNet8Angular17MaterialTailwindAPI.EmailNotification.Interfaces;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.EmailNotification.Services;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Redis.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Redis.Services;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Principal.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Repositories.Principal.Services;
@@ -28,6 +30,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.AppStartUp
             services.AddScoped<IStudentService, StudentService>();
 
             services.AddSingleton<ICacheService, CacheService>();
+
+            services.AddScoped<IEmailService, EmailService>();
 
             return services;
         }
