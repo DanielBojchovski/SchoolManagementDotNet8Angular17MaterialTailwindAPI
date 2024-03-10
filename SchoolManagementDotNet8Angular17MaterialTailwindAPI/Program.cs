@@ -129,4 +129,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+AppDbInitializer.SeedDB(app).Wait();
+
 app.Run();
