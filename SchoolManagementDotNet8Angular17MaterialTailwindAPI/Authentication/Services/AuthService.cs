@@ -1,12 +1,16 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.IdentityModel.Tokens;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Requests;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Responses;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Responses;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Consts;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.EmailNotification.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.EmailNotification.Requests;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Entities;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 
 namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Services
@@ -15,11 +19,13 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Ser
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IEmailService _emailService;
+        private readonly IConfiguration _configuration;
 
-        public AuthService(UserManager<ApplicationUser> userManager, IEmailService emailService)
+        public AuthService(UserManager<ApplicationUser> userManager, IEmailService emailService, IConfiguration configuration)
         {
             _userManager = userManager;
             _emailService = emailService;
+            _configuration = configuration;
         }
 
         public async Task<OperationStatusResponse> Register(RegisterUserRequest request)
@@ -128,6 +134,69 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Ser
             var emailResponse = await _emailService.SendEmail(emailRequest);
 
             return new OperationStatusResponse { IsSuccessful = emailResponse.EmailsWhichRecieveMail.Count > 0 };
+        }
+
+        public async Task<LoginResponse> Login(LoginRequest request)
+        {
+            var user = await _userManager.FindByEmailAsync(request.Email);
+
+            if (user is null)
+                return new LoginResponse()
+                {
+                    IsSuccessful = false,
+                    Message = "Invalid Credentials",
+                    JwtToken = null
+                };
+
+            var isPasswordCorrect = await _userManager.CheckPasswordAsync(user, request.Password);
+
+            if (!isPasswordCorrect)
+                return new LoginResponse()
+                {
+                    IsSuccessful = false,
+                    Message = "Invalid Credentials",
+                    JwtToken = null
+                };
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            var authClaims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Name, user.UserName ?? ""),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+                new Claim("email", user.Email ?? "")
+            };
+
+            foreach (var userRole in userRoles)
+            {
+                authClaims.Add(new Claim("roles", userRole));
+            }
+
+            var token = GenerateNewJsonWebToken(authClaims);
+
+            return new LoginResponse()
+            {
+                IsSuccessful = true,
+                Message = "",
+                JwtToken = token
+            };
+        }
+
+        private string GenerateNewJsonWebToken(List<Claim> claims)
+        {
+            var authSecret = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtOptions:SecretKey"]!));
+
+            var tokenObject = new JwtSecurityToken(
+                    issuer: _configuration["JwtOptions:Issuer"],
+                    audience: _configuration["JwtOptions:Audience"],
+                    expires: DateTime.Now.AddHours(8),
+                    claims: claims,
+                    signingCredentials: new SigningCredentials(authSecret, SecurityAlgorithms.HmacSha256)
+                );
+
+            string token = new JwtSecurityTokenHandler().WriteToken(tokenObject);
+
+            return token;
         }
     }
 }

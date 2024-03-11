@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Requests;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Responses;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Responses;
 
 namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Controllers
@@ -32,6 +33,12 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Controllers
         public async Task<ActionResult<OperationStatusResponse>> ResendEmailConfirmation(ResendEmailConfirmationRequest request)
         {
             return await _authService.ResendEmailConfirmation(request);
+        }
+
+        [HttpPost("Login")]
+        public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
+        {
+            return await _authService.Login(request);
         }
     }
 }
