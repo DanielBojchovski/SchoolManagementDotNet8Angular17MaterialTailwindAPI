@@ -10,5 +10,6 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Int
         Task<OperationStatusResponse> ConfirmEmail(ConfirmEmailRequest request);
         Task<OperationStatusResponse> ResendEmailConfirmation(ResendEmailConfirmationRequest request);
         Task<LoginResponse> Login(LoginRequest request);
+        Task<LoginResponse> RefreshToken(RefreshTokenRequest request);
     }
 }

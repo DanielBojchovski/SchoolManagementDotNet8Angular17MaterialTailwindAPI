@@ -11,6 +11,7 @@ using SchoolManagementDotNet8Angular17MaterialTailwindAPI.EmailNotification.Requ
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Entities;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Services
@@ -145,7 +146,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Ser
                 {
                     IsSuccessful = false,
                     Message = "Invalid Credentials",
-                    JwtToken = null
+                    JwtToken = null,
+                    RefreshToken = null
                 };
 
             var isPasswordCorrect = await _userManager.CheckPasswordAsync(user, request.Password);
@@ -155,7 +157,8 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Ser
                 {
                     IsSuccessful = false,
                     Message = "Invalid Credentials",
-                    JwtToken = null
+                    JwtToken = null,
+                    RefreshToken = null
                 };
 
             var userRoles = await _userManager.GetRolesAsync(user);
@@ -174,11 +177,18 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Ser
 
             var token = GenerateNewJsonWebToken(authClaims);
 
+            var refreshToken = CreateRefreshToken();
+
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+            await _userManager.UpdateAsync(user);
+
             return new LoginResponse()
             {
                 IsSuccessful = true,
                 Message = "",
-                JwtToken = token
+                JwtToken = token,
+                RefreshToken = refreshToken
             };
         }
 
@@ -189,7 +199,7 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Ser
             var tokenObject = new JwtSecurityToken(
                     issuer: _configuration["JwtOptions:Issuer"],
                     audience: _configuration["JwtOptions:Audience"],
-                    expires: DateTime.Now.AddHours(8),
+                    expires: DateTime.Now.AddMinutes(15),
                     claims: claims,
                     signingCredentials: new SigningCredentials(authSecret, SecurityAlgorithms.HmacSha256)
                 );
@@ -197,6 +207,75 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Ser
             string token = new JwtSecurityTokenHandler().WriteToken(tokenObject);
 
             return token;
+        }
+
+        private string CreateRefreshToken()
+        {
+            var tokenBytes = RandomNumberGenerator.GetBytes(64);
+            var refreshToken = Convert.ToBase64String(tokenBytes);
+
+            var tokenInUser = _userManager.Users
+                .Any(a => a.RefreshToken == refreshToken);
+            if (tokenInUser)
+            {
+                return CreateRefreshToken();
+            }
+            return refreshToken;
+        }
+
+        private ClaimsPrincipal GetPrincipleFromExpiredToken(string token)
+        {
+            var key = Encoding.ASCII.GetBytes(_configuration["JwtOptions:SecretKey"]!);
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = false,
+                ValidateIssuer = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateLifetime = false
+            };
+            var tokenHandler = new JwtSecurityTokenHandler();
+            SecurityToken securityToken;
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
+            var jwtSecurityToken = securityToken as JwtSecurityToken;
+            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                throw new SecurityTokenException("This is Invalid Token");
+            return principal;
+        }
+
+        public async Task<LoginResponse> RefreshToken(RefreshTokenRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Token) || string.IsNullOrEmpty(request.RefreshToken))
+                return new LoginResponse { IsSuccessful = false, Message = "Invalid tokens", JwtToken = "", RefreshToken = "" };
+
+            var principal = GetPrincipleFromExpiredToken(request.Token);
+            var username = principal.Claims.ToList()[0].Value;//var username = principal.Identity.Name;
+            var user = await _userManager.FindByNameAsync(username!.ToString());
+            if (user is null || user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
+                return new LoginResponse { IsSuccessful = false, Message = "Invalid Request", JwtToken = "", RefreshToken = "" };
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            var authClaims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Name, user.UserName ?? ""),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+                new Claim("email", user.Email ?? "")
+            };
+
+            foreach (var userRole in userRoles)
+            {
+                authClaims.Add(new Claim("roles", userRole));
+            }
+
+            var newToken = GenerateNewJsonWebToken(authClaims);
+            var newRefreshToken = CreateRefreshToken();
+
+            user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+            await _userManager.UpdateAsync(user);
+
+            return new LoginResponse { IsSuccessful = true, Message = "", JwtToken = newToken, RefreshToken = newRefreshToken };
         }
     }
 }

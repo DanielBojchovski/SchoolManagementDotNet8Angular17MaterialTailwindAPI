@@ -40,5 +40,11 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Controllers
         {
             return await _authService.Login(request);
         }
+
+        [HttpPost("RefreshToken")]
+        public async Task<ActionResult<LoginResponse>> RefreshToken(RefreshTokenRequest request)
+        {
+            return await _authService.RefreshToken(request);
+        }
     }
 }
