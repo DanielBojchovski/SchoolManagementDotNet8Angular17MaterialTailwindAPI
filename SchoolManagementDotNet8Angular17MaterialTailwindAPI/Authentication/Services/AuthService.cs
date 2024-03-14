@@ -21,12 +21,14 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Ser
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
+        private readonly SignInManager<ApplicationUser> _signInManager;
 
-        public AuthService(UserManager<ApplicationUser> userManager, IEmailService emailService, IConfiguration configuration)
+        public AuthService(UserManager<ApplicationUser> userManager, IEmailService emailService, IConfiguration configuration, SignInManager<ApplicationUser> signInManager)
         {
             _userManager = userManager;
             _emailService = emailService;
             _configuration = configuration;
+            _signInManager = signInManager;
         }
 
         public async Task<OperationStatusResponse> Register(RegisterUserRequest request)
@@ -92,10 +94,10 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Ser
         {
             var user = await _userManager.FindByEmailAsync(request.Email);
 
-            if (user is null) 
+            if (user is null)
                 return new OperationStatusResponse { IsSuccessful = false, Message = "This email address has not been registered yet" };
 
-            if(user.EmailConfirmed == true)
+            if (user.EmailConfirmed == true)
                 return new OperationStatusResponse { IsSuccessful = false, Message = "Your email was confirmed before. Please login to your account" };
 
             var decodedTokenBytes = WebEncoders.Base64UrlDecode(request.Token);
@@ -110,12 +112,12 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Ser
 
         public async Task<OperationStatusResponse> ResendEmailConfirmation(ResendEmailConfirmationRequest request)
         {
-            if (string.IsNullOrEmpty(request.Email)) 
+            if (string.IsNullOrEmpty(request.Email))
                 return new OperationStatusResponse { IsSuccessful = false, Message = "Invalid email" };
 
             var user = await _userManager.FindByEmailAsync(request.Email);
 
-            if (user is null) 
+            if (user is null)
                 return new OperationStatusResponse { IsSuccessful = false, Message = "This email address has not been registerd yet" };
 
             if (user.EmailConfirmed == true)
@@ -276,6 +278,34 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Ser
             await _userManager.UpdateAsync(user);
 
             return new LoginResponse { IsSuccessful = true, Message = "", JwtToken = newToken, RefreshToken = newRefreshToken };
+        }
+
+        public async Task<OperationStatusResponse> ChangePassword(ChangePasswordRequest request)
+        {
+            if (request.NewPassword != request.ConfirmNewPassword)
+                return new OperationStatusResponse { IsSuccessful = false, Message = "New password and confirm new password mismatch." };
+
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user is null)
+                return new OperationStatusResponse { IsSuccessful = false, Message = "User does not exist." };
+
+            var canSignInResult = await _signInManager.CheckPasswordSignInAsync(user, request.CurrentPassword, true);
+            if (!canSignInResult.Succeeded)
+                return new OperationStatusResponse { IsSuccessful = false, Message = "Invalid credentials." };
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, request.NewPassword);
+
+            if (result.Succeeded)
+            {
+                user.RefreshToken = null;
+                await _userManager.UpdateAsync(user);
+                return new OperationStatusResponse { IsSuccessful = true, Message = "" };
+            }
+            else
+            {
+                return new OperationStatusResponse { IsSuccessful = false, Message = "Something went wrong." };
+            }
         }
     }
 }

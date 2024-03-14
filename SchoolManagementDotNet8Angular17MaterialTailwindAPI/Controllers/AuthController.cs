@@ -46,5 +46,11 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Controllers
         {
             return await _authService.RefreshToken(request);
         }
+
+        [HttpPost("ChangePassword")]
+        public async Task<ActionResult<OperationStatusResponse>> ChangePassword(ChangePasswordRequest request)
+        {
+            return await _authService.ChangePassword(request);
+        }
     }
 }
