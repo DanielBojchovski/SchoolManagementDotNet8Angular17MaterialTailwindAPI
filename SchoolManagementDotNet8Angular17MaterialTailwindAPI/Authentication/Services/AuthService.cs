@@ -307,5 +307,67 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Ser
                 return new OperationStatusResponse { IsSuccessful = false, Message = "Something went wrong." };
             }
         }
+
+        public async Task<OperationStatusResponse> ForgotPasswordSendEmail(ForgotPasswordSendEmailRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Email))
+                return new OperationStatusResponse { IsSuccessful = false, Message = "Invalid email" };
+
+            var user = await _userManager.FindByEmailAsync(request.Email);
+
+            if (user is null)
+                return new OperationStatusResponse { IsSuccessful = false, Message = "User does not exist" };
+
+            if (user.EmailConfirmed is false)
+                return new OperationStatusResponse { IsSuccessful = false, Message = "Confirm you email first" };
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            var url = $"http://localhost:4200/account/forgot-password/{token}/{user.Email}";
+
+            SendEmailRequest emailRequest = new()
+            {
+                EmailTo = new List<string> { user.Email! },
+                EmailSubject = "Forgot password request.",
+                EmailBody = $"Hello {user.UserName}, please follow this link to set new password <p><a href=\"{url}\">Click here</a></p>"
+            };
+
+            var emailResponse = await _emailService.SendEmail(emailRequest);
+
+            return new OperationStatusResponse { IsSuccessful = emailResponse.EmailsWhichRecieveMail.Count > 0 };
+        }
+
+        public async Task<OperationStatusResponse> ResetPassword(ResetPasswordRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Email))
+                return new OperationStatusResponse { IsSuccessful = false, Message = "Invalid email" };
+
+            if (string.IsNullOrEmpty(request.Token))
+                return new OperationStatusResponse { IsSuccessful = false, Message = "Invalid email" };
+
+            var user = await _userManager.FindByEmailAsync(request.Email);
+
+            if (user is null)
+                return new OperationStatusResponse { IsSuccessful = false, Message = "User does not exist" };
+
+            if (user.EmailConfirmed is false)
+                return new OperationStatusResponse { IsSuccessful = false, Message = "Confirm you email first" };
+
+            var decodedTokenBytes = WebEncoders.Base64UrlDecode(request.Token);
+            var decodedToken = Encoding.UTF8.GetString(decodedTokenBytes);
+
+            var result = await _userManager.ResetPasswordAsync(user, decodedToken, request.NewPassword);
+
+            if (result.Succeeded)
+            {
+                user.RefreshToken = null;
+                await _userManager.UpdateAsync(user);
+                return new OperationStatusResponse { IsSuccessful = true, Message = "Successfully restored password" };
+            }
+            else
+            {
+                return new OperationStatusResponse { IsSuccessful = false, Message = "Something went wrong" };
+            }
+        }
     }
 }

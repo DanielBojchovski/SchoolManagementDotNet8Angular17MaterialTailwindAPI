@@ -12,5 +12,7 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Int
         Task<LoginResponse> Login(LoginRequest request);
         Task<LoginResponse> RefreshToken(RefreshTokenRequest request);
         Task<OperationStatusResponse> ChangePassword(ChangePasswordRequest request);
+        Task<OperationStatusResponse> ForgotPasswordSendEmail(ForgotPasswordSendEmailRequest request);
+        Task<OperationStatusResponse> ResetPassword(ResetPasswordRequest request);
     }
 }
