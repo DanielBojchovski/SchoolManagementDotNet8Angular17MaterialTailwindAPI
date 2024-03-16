@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Interfaces;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Requests;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Responses;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Responses;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Consts;
 
 namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Controllers
 {
@@ -63,6 +65,20 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Controllers
         public async Task<ActionResult<OperationStatusResponse>> ResetPassword(ResetPasswordRequest request)
         {
             return await _authService.ResetPassword(request);
+        }
+
+        [HttpPost("MakeAdmin")]
+        [Authorize(Roles = StaticUserRoles.ADMIN)]
+        public async Task<OperationStatusResponse> MakeAdmin(UpdatePermissionRequest request)
+        {
+            return await _authService.MakeAdmin(request);
+        }
+
+        [HttpPost("GetAvailableUsers")]
+        [Authorize(Roles = StaticUserRoles.ADMIN)]
+        public async Task<GetAvailableUsersResponse> GetAvailableUsers(GetAvailableUsersRequest request)
+        {
+            return await _authService.GetAvailableUsers(request);
         }
     }
 }

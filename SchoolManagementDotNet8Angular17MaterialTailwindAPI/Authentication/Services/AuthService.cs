@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Interfaces;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Models;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Requests;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Responses;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Common.Responses;
@@ -368,6 +370,39 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Ser
             {
                 return new OperationStatusResponse { IsSuccessful = false, Message = "Something went wrong" };
             }
+        }
+
+        public async Task<OperationStatusResponse> MakeAdmin(UpdatePermissionRequest request)
+        {
+            var user = await _userManager.FindByIdAsync(request.Id);
+
+            if (user is null)
+                return new OperationStatusResponse()
+                {
+                    IsSuccessful = false,
+                    Message = "User does not exist"
+                };
+
+            var result = await _userManager.AddToRoleAsync(user, StaticUserRoles.ADMIN);
+
+            if (result.Succeeded)
+                return new OperationStatusResponse { IsSuccessful = true, Message = "User is now Admin" };
+            else
+                return new OperationStatusResponse { IsSuccessful = false, Message = "Something went wrong" };
+        }
+
+        public async Task<GetAvailableUsersResponse> GetAvailableUsers(GetAvailableUsersRequest request)
+        {
+            var list = await _userManager.Users.Where(a => a.Id != request.CurrentLoggedInUserId)
+                .OrderBy(x => x.Email!)
+                .AsNoTracking()
+                .Select(x => new UserDropDownModel
+                {
+                    Id = x.Id,
+                    Name = x.Email!
+                }).ToListAsync();
+
+            return new GetAvailableUsersResponse { List = list };
         }
     }
 }
