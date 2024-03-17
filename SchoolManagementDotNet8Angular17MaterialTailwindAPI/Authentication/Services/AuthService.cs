@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Google.Apis.Auth;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -403,6 +404,112 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Authentication.Ser
                 }).ToListAsync();
 
             return new GetAvailableUsersResponse { List = list };
+        }
+
+        public async Task<LoginResponse> GoogleLogin(GoogleLoginRequest request)
+        {
+            var settings = new GoogleJsonWebSignature.ValidationSettings 
+            { 
+                Audience = ["475607389510-bescq2cnu6d4b562si46uvk1gm4700f4.apps.googleusercontent.com"]
+            };
+            var result = await GoogleJsonWebSignature.ValidateAsync(request.IdToken, settings);
+
+            var user = await _userManager.FindByEmailAsync(result.Email);
+
+            if(user is null)
+            {
+                ApplicationUser newUser = new ApplicationUser()
+                {
+                    FirstName = result.GivenName,
+                    LastName = result.FamilyName,
+                    Email = result.Email,
+                    UserName = result.GivenName + result.FamilyName,
+                    SecurityStamp = Guid.NewGuid().ToString(),
+                    PasswordHash = null,
+                    EmailConfirmed = true
+                };
+
+                var createUserResult = await _userManager.CreateAsync(newUser);
+
+                if (!createUserResult.Succeeded)
+                {
+                    var errorString = "User Creation Failed Because: ";
+                    foreach (var error in createUserResult.Errors)
+                    {
+                        errorString += " # " + error.Description;
+                    }
+                    return new LoginResponse()
+                    {
+                        IsSuccessful = false,
+                        Message = errorString
+                    };
+                }
+
+                // Add a Default USER Role to all users
+                await _userManager.AddToRoleAsync(newUser, StaticUserRoles.USER);
+
+                var userRoles = await _userManager.GetRolesAsync(newUser);
+
+                var authClaims = new List<Claim>
+                {
+                    new Claim(JwtRegisteredClaimNames.Name, newUser.UserName ?? ""),
+                    new Claim(JwtRegisteredClaimNames.Sub, newUser.Id),
+                    new Claim("email", newUser.Email ?? "")
+                };
+
+                foreach (var userRole in userRoles)
+                {
+                    authClaims.Add(new Claim("roles", userRole));
+                }
+
+                var token = GenerateNewJsonWebToken(authClaims);
+
+                var refreshToken = CreateRefreshToken();
+
+                newUser.RefreshToken = refreshToken;
+                newUser.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+                await _userManager.UpdateAsync(newUser);
+
+                return new LoginResponse()
+                {
+                    IsSuccessful = true,
+                    Message = "",
+                    JwtToken = token,
+                    RefreshToken = refreshToken
+                };
+            }
+            else
+            {
+                var userRoles = await _userManager.GetRolesAsync(user);
+
+                var authClaims = new List<Claim>
+                {
+                    new Claim(JwtRegisteredClaimNames.Name, user.UserName ?? ""),
+                    new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+                    new Claim("email", user.Email ?? "")
+                };
+
+                foreach (var userRole in userRoles)
+                {
+                    authClaims.Add(new Claim("roles", userRole));
+                }
+
+                var token = GenerateNewJsonWebToken(authClaims);
+
+                var refreshToken = CreateRefreshToken();
+
+                user.RefreshToken = refreshToken;
+                user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+                await _userManager.UpdateAsync(user);
+
+                return new LoginResponse()
+                {
+                    IsSuccessful = true,
+                    Message = "",
+                    JwtToken = token,
+                    RefreshToken = refreshToken
+                };
+            }
         }
     }
 }

@@ -80,5 +80,11 @@ namespace SchoolManagementDotNet8Angular17MaterialTailwindAPI.Controllers
         {
             return await _authService.GetAvailableUsers(request);
         }
+
+        [HttpPost("GoogleLogin")]
+        public async Task<ActionResult<LoginResponse>> GoogleLogin(GoogleLoginRequest request)
+        {
+            return await _authService.GoogleLogin(request);
+        }
     }
 }
