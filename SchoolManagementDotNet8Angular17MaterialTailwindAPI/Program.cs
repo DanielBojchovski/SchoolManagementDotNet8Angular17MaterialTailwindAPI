@@ -6,6 +6,8 @@ using Microsoft.OpenApi.Models;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.AppStartUp;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.EmailNotification.Options;
 using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Entities;
+using SchoolManagementDotNet8Angular17MaterialTailwindAPI.Stripe.Models;
+using Stripe;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -109,6 +111,10 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.ConfigureOptions<MailOptionsSetup>();
+
+builder.Services.Configure<StripeModel>(builder.Configuration.GetSection("Stripe"));
+builder.Services.AddScoped<CustomerService>();
+builder.Services.AddScoped<ProductService>();
 
 var app = builder.Build();
 
